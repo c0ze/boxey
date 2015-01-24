@@ -15,6 +15,8 @@ class AppDelegate
     @blue_view = UIView.alloc.initWithFrame(CGRect.new([10, 40], [100, 100]))
     @blue_view.backgroundColor = UIColor.blueColor
     @window.addSubview(@blue_view)
+    add_labels_to_boxes
+
 
     @add_button = UIButton.buttonWithType(UIButtonTypeSystem)
     @add_button.setTitle("Add", forState:UIControlStateNormal)
@@ -26,6 +28,7 @@ class AppDelegate
 
     @add_button.addTarget(
       self, action:"add_tapped", forControlEvents:UIControlEventTouchUpInside)
+
     @remove_button = UIButton.buttonWithType(UIButtonTypeSystem)
     @remove_button.setTitle("Remove", forState:UIControlStateNormal)
     @remove_button.sizeToFit
@@ -34,9 +37,11 @@ class AppDelegate
         @add_button.frame.origin.y],
       @remove_button.frame.size)
     @window.addSubview(@remove_button)
+
     @remove_button.addTarget(
       self, action:"remove_tapped",
       forControlEvents:UIControlEventTouchUpInside)
+
     true
   end
 
@@ -50,18 +55,18 @@ class AppDelegate
         last_view.frame.origin.y + last_view.frame.size.height + 10],
       last_view.frame.size)
     @window.insertSubview(new_view, atIndex:0)
+    add_labels_to_boxes
+
   end
 
   def remove_tapped
-    other_views = @window.subviews.reject { |view|
-      view.is_a?(UIButton)
-    }
+    other_views = self.boxes
     last_view = other_views.last
-    return unless last_view && other_views.count > 1
 
     animations_block = lambda {
       last_view.alpha = 0
       last_view.backgroundColor = UIColor.redColor
+
       other_views.reject { |view|
         view == last_view
       }.each { |view|
@@ -74,11 +79,41 @@ class AppDelegate
           view.frame.size)
       }
     }
+
     completion_block = lambda { |finished|
       last_view.removeFromSuperview
+      add_labels_to_boxes
     }
+
     UIView.animateWithDuration(0.5,
       animations: animations_block,
       completion: completion_block)
+  end
+
+  def boxes
+    @window.subviews.reject do |view|
+      view.is_a?(UIButton) or view.is_a?(UILabel)
+    end
+  end
+
+  def add_labels_to_boxes
+    self.boxes.each do |box|
+      add_label_to_box(box)
+    end
+  end
+
+  def add_label_to_box(box)
+    box.subviews.each do |subview|
+      subview.removeFromSuperview
+    end
+
+    index_of_box = @window.subviews.index(box)
+    label = UILabel.alloc.initWithFrame(CGRectZero)
+    label.text = "#{index_of_box}"
+    label.textColor = UIColor.whiteColor
+    label.backgroundColor = UIColor.clearColor
+    label.sizeToFit
+    label.center = [box.frame.size.width / 2, box.frame.size.height / 2]
+    box.addSubview(label)
   end
 end
