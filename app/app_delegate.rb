@@ -11,9 +11,9 @@ class AppDelegate
     @window = UIWindow.alloc.initWithFrame(UIScreen.mainScreen.bounds)
     @window.backgroundColor = UIColor.whiteColor
     @window.makeKeyAndVisible
-
+    @box_color = UIColor.blueColor
     @blue_view = UIView.alloc.initWithFrame(CGRect.new([10, 40], [100, 100]))
-    @blue_view.backgroundColor = UIColor.blueColor
+    @blue_view.backgroundColor = @box_color
     @window.addSubview(@blue_view)
     add_labels_to_boxes
 
@@ -42,12 +42,50 @@ class AppDelegate
       self, action:"remove_tapped",
       forControlEvents:UIControlEventTouchUpInside)
 
+    @color_field = UITextField.alloc.initWithFrame(CGRectZero)
+    @color_field.borderStyle = UITextBorderStyleRoundedRect
+    @color_field.text = "Blue"
+    @color_field.enablesReturnKeyAutomatically = true
+    @color_field.returnKeyType = UIReturnKeyDone
+    @color_field.autocapitalizationType = UITextAutocapitalizationTypeNone
+    @color_field.sizeToFit
+    @color_field.frame = CGRect.new(
+      [@blue_view.frame.origin.x + @blue_view.frame.size.width + 10,
+        @blue_view.frame.origin.y + @color_field.frame.size.height],
+      @color_field.frame.size)
+    @window.addSubview(@color_field)
+
+    @color_field.delegate = self
+
     true
+  end
+
+  def textFieldShouldReturn(textField)
+    color_tapped
+    textField.resignFirstResponder
+    false
+  end
+
+  def color_tapped
+    color_prefix = @color_field.text
+    color_method = "#{color_prefix.downcase}Color"
+    if UIColor.respond_to?(color_method)
+      @box_color = UIColor.send(color_method)
+      self.boxes.each do |box|
+        box.backgroundColor = @box_color
+      end
+    else
+      UIAlertView.alloc.initWithTitle("Invalid Color",
+          message: "#{color_prefix} is not a valid color",
+          delegate: nil,
+          cancelButtonTitle: "OK",
+          otherButtonTitles: nil).show
+    end
   end
 
   def add_tapped
     new_view = UIView.alloc.initWithFrame(CGRect.new([0, 0], [100, 100]))
-    new_view.backgroundColor = UIColor.blueColor
+    new_view.backgroundColor = @box_color
 
     last_view = @window.subviews[0]
     new_view.frame = CGRect.new(
@@ -92,7 +130,7 @@ class AppDelegate
 
   def boxes
     @window.subviews.reject do |view|
-      view.is_a?(UIButton) or view.is_a?(UILabel)
+      view.is_a?(UIButton) or view.is_a?(UILabel) or view.is_a?(UITextField)
     end
   end
 
